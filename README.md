@@ -91,7 +91,7 @@ The better-sidebar integration uses its public `ctx.betterSidebar.registerTab` A
 
 ## Verification and documentation
 
-- 29 automated tests cover projection, isolation, links, attachment I/O, authentication, managed-tab registration, disposal, and session adaptation.
+- 30 automated tests cover projection, isolation, links, attachment I/O, authentication, managed-tab registration, disposal, Start-guide deduplication, and session adaptation.
 - [Acceptance and known boundaries](./docs/acceptance.md)
 - [Installation details](./docs/installation.md)
 - [Reference and license audit](./docs/reference-audit.md)

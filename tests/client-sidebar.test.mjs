@@ -24,7 +24,7 @@ async function loadClient() {
   });
 }
 
-function fixture() {
+function fixture(managed = true) {
   const descriptors = [];
   const nativeTabs = [];
   const inputs = new Map();
@@ -50,9 +50,14 @@ function fixture() {
     locale: { register: () => () => {}, bind: () => key => key },
     sidebarRightTabs: { register(descriptor) { nativeTabs.push(descriptor); return () => {}; } },
     slots: { inject() {} },
-    inject(names, callback) { assert.equal(names.length, 1); assert.equal(names[0], 'betterSidebar'); ctx.injectedDisposer = callback(scope); },
+    inject(names, callback) {
+      assert.equal(names.length, 1);
+      assert.equal(names[0], 'betterSidebar');
+      if (managed) ctx.injectedDisposer = callback(scope);
+    },
     effect(callback) { return callback(); },
     get(name) {
+      if (name === 'betterSidebar') return managed ? scope.betterSidebar : undefined;
       assert.equal(name, 'conversation');
       return { input: { for: scopeCtx => inputs.get(scopeCtx) } };
     },
@@ -60,7 +65,7 @@ function fixture() {
   return { ctx, descriptors, nativeTabs };
 }
 
-test('registers a managed sidebar tab and keeps the native fallback', async () => {
+test('registers one managed Start entry and keeps a guideless native fallback', async () => {
   const client = await loadClient();
   const { ctx, descriptors, nativeTabs } = fixture();
   client.apply(ctx);
@@ -71,6 +76,16 @@ test('registers a managed sidebar tab and keeps the native fallback', async () =
   assert.equal(descriptor.description(), 'sources.subtitle');
   assert.equal(descriptor.single, true);
   assert.equal(nativeTabs[0].kind, 'session-sources');
+  assert.equal(nativeTabs[0].guide, undefined);
+});
+
+test('keeps the native Start entry when betterSidebar is unavailable', async () => {
+  const client = await loadClient();
+  const { ctx, descriptors, nativeTabs } = fixture(false);
+  client.apply(ctx);
+  assert.equal(descriptors.length, 0);
+  assert.equal(nativeTabs[0].kind, 'session-sources');
+  assert.equal(nativeTabs[0].guide[0].id, 'sources');
 });
 
 test('managed tab resolves projection and composer input from its own session scope', async () => {

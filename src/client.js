@@ -233,6 +233,7 @@ window.__ModuleLoader__.load({
         const dictionaries = Object.fromEntries(Object.entries(DICTS).map(([locale, dict]) => [locale, Object.fromEntries(Object.entries(dict).filter(([key, value]) => key !== 'meta' && typeof value === 'string'))]));
         ctx.effect(() => ctx.locale.register(NS, dictionaries));
         const t = ctx.locale.bind(NS);
+        const hasManaged = ctx.get('betterSidebar') !== undefined;
         const { Header, Panel, ManagedPanel } = createComponents(ctx, t);
         ctx.inject(['betterSidebar'], scope => {
           scope.effect(() => scope.betterSidebar.registerTab({
@@ -244,7 +245,15 @@ window.__ModuleLoader__.load({
             component: ManagedPanel,
           }));
         });
-        ctx.effect(() => ctx.sidebarRightTabs.register({ id: ID, kind: KIND, title: () => t('sources.title'), guide: [{ id: 'sources', title: () => t('sources.title'), description: () => t('sources.subtitle'), icon: () => glyph('file', 20) }] }));
+        // With betterSidebar installed, its registered tab owns the Start guide
+        // card. The native registration stays as the header/right-pane fallback
+        // but must not contribute a second, identical guide entry.
+        ctx.effect(() => ctx.sidebarRightTabs.register({
+          id: ID,
+          kind: KIND,
+          title: () => t('sources.title'),
+          ...(hasManaged ? {} : { guide: [{ id: 'sources', title: () => t('sources.title'), description: () => t('sources.subtitle'), icon: () => glyph('file', 20) }] }),
+        }));
         ctx.slots.inject('conversation.session.header.utilities', () => ctx.slots.register({ name: 'conversation.session.header.utilities', id: 'session-sources', order: 5, locale: NS }, Header));
         ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: ID, locale: NS }, Panel));
         ctx.slots.inject('sidebar.right.pane.tab.title', () => ctx.slots.register({ name: 'sidebar.right.pane.tab.title', key: ID, locale: NS }, ({ t }) => h('span', { className: 'ss-tab-title' }, glyph('file', 14), t('sources.title'))));
