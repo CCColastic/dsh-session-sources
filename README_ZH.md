@@ -91,7 +91,7 @@ python scripts/verify-package.py
 
 ## 验证与文档
 
-- 30 项自动测试覆盖投影、会话隔离、链接、附件读写、鉴权、Tab 注册与卸载、开始页去重、会话适配。
+- 31 项自动测试覆盖投影、会话隔离、链接、附件读写、鉴权、Tab 注册与卸载、开始页去重、延迟服务替换、会话适配。
 - [验收结果与功能边界](./docs/acceptance.md)
 - [安装说明](./docs/installation.md)
 - [参考项目与许可审计](./docs/reference-audit.md)

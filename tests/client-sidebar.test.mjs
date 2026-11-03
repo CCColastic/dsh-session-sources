@@ -27,8 +27,10 @@ async function loadClient() {
 function fixture(managed = true) {
   const descriptors = [];
   const nativeTabs = [];
+  const nativeActive = [];
   const inputs = new Map();
   const bindings = new Map();
+  let available = managed;
   for (const sessionId of ['session-a', 'session-b']) {
     const state = { sessionId, order: [`${sessionId}-item`], items: {} };
     const projection = { getSnapshot: () => state, subscribe: () => () => {} };
@@ -48,26 +50,43 @@ function fixture(managed = true) {
   const ctx = {
     sessions: { binding: id => bindings.get(id), refreshProjections: async () => {} },
     locale: { register: () => () => {}, bind: () => key => key },
-    sidebarRightTabs: { register(descriptor) { nativeTabs.push(descriptor); return () => {}; } },
+    sidebarRightTabs: {
+      register(descriptor) {
+        nativeTabs.push(descriptor);
+        nativeActive.push(descriptor);
+        return () => {
+          const index = nativeActive.indexOf(descriptor);
+          if (index >= 0) nativeActive.splice(index, 1);
+          descriptor.disposed = true;
+        };
+      },
+    },
     slots: { inject() {} },
     inject(names, callback) {
       assert.equal(names.length, 1);
       assert.equal(names[0], 'betterSidebar');
-      if (managed) ctx.injectedDisposer = callback(scope);
+      ctx.activateBetterSidebar = () => callback(scope);
+      if (available) ctx.activateBetterSidebar();
     },
     effect(callback) { return callback(); },
     get(name) {
-      if (name === 'betterSidebar') return managed ? scope.betterSidebar : undefined;
+      if (name === 'betterSidebar') return available ? scope.betterSidebar : undefined;
       assert.equal(name, 'conversation');
       return { input: { for: scopeCtx => inputs.get(scopeCtx) } };
     },
   };
-  return { ctx, descriptors, nativeTabs };
+  return {
+    ctx,
+    descriptors,
+    nativeTabs,
+    nativeActive,
+    enableBetterSidebar() { available = true; ctx.activateBetterSidebar(); },
+  };
 }
 
 test('registers one managed Start entry and keeps a guideless native fallback', async () => {
   const client = await loadClient();
-  const { ctx, descriptors, nativeTabs } = fixture();
+  const { ctx, descriptors, nativeActive } = fixture();
   client.apply(ctx);
   assert.equal(descriptors.length, 1);
   const descriptor = descriptors[0];
@@ -75,17 +94,31 @@ test('registers one managed Start entry and keeps a guideless native fallback', 
   assert.equal(descriptor.title(), 'sources.title');
   assert.equal(descriptor.description(), 'sources.subtitle');
   assert.equal(descriptor.single, true);
-  assert.equal(nativeTabs[0].kind, 'session-sources');
-  assert.equal(nativeTabs[0].guide, undefined);
+  assert.equal(nativeActive.length, 1);
+  assert.equal(nativeActive[0].kind, 'session-sources');
+  assert.equal(nativeActive[0].guide, undefined);
 });
 
 test('keeps the native Start entry when betterSidebar is unavailable', async () => {
   const client = await loadClient();
-  const { ctx, descriptors, nativeTabs } = fixture(false);
+  const { ctx, descriptors, nativeActive } = fixture(false);
   client.apply(ctx);
   assert.equal(descriptors.length, 0);
-  assert.equal(nativeTabs[0].kind, 'session-sources');
-  assert.equal(nativeTabs[0].guide[0].id, 'sources');
+  assert.equal(nativeActive.length, 1);
+  assert.equal(nativeActive[0].kind, 'session-sources');
+  assert.equal(nativeActive[0].guide[0].id, 'sources');
+});
+
+test('removes the native Start entry if betterSidebar arrives later', async () => {
+  const client = await loadClient();
+  const { ctx, descriptors, nativeActive, enableBetterSidebar } = fixture(false);
+  client.apply(ctx);
+  assert.equal(descriptors.length, 0);
+  assert.equal(nativeActive[0].guide[0].id, 'sources');
+  enableBetterSidebar();
+  assert.equal(descriptors.length, 1);
+  assert.equal(nativeActive.length, 1);
+  assert.equal(nativeActive[0].guide, undefined);
 });
 
 test('managed tab resolves projection and composer input from its own session scope', async () => {
