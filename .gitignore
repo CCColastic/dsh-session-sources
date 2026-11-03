@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.host-api/
+.verification/
+.playwright-mcp/
+scripts/extract-host-api.py
+*.log
+.DS_Store
+Thumbs.db

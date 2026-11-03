@@ -1,0 +1,109 @@
+{
+  "date": "2026-11-02T09:54:28.978Z",
+  "runtime": "0.2.1-rc.5",
+  "platform": "win32",
+  "checks": [
+    {
+      "name": "native image admission and verified image read",
+      "passed": true,
+      "details": {
+        "width": 16,
+        "height": 12,
+        "bytes": 83,
+        "hostPathAvailable": true
+      }
+    },
+    {
+      "name": "native file admission and verified streamed file read",
+      "passed": true,
+      "details": {
+        "bytes": 48,
+        "hostPathAvailable": true
+      }
+    },
+    {
+      "name": "real Host projection lists image, file and link as three sources",
+      "passed": true,
+      "details": {
+        "items": 3,
+        "sourceSeq": 3
+      }
+    },
+    {
+      "name": "real Host sources service produces exact image and file responses",
+      "passed": true,
+      "details": {
+        "imageResponseVerified": true,
+        "fileResponseVerified": true
+      }
+    },
+    {
+      "name": "independent real Session B cannot access A sources",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "real duplicate send merges item and retains both source events",
+      "passed": true,
+      "details": {
+        "items": 3,
+        "occurrencesPerItem": 2
+      }
+    },
+    {
+      "name": "real fork inherits material references and isolated source identities",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "derived state exactly rebuilds from real Session history",
+      "passed": true,
+      "details": {
+        "events": 6
+      }
+    },
+    {
+      "name": "missing attachment produces ENOENT while good originals remain usable",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "pre-install current-session attachment reconstructs from existing history",
+      "passed": true,
+      "details": {
+        "priorImageFound": true,
+        "priorImageVerified": true,
+        "totalSources": 4
+      }
+    },
+    {
+      "name": "live HTTP endpoint rejects unauthenticated access",
+      "passed": true,
+      "details": {
+        "status": 401
+      }
+    }
+  ],
+  "passed": 11,
+  "total": 11,
+  "fixtures": {
+    "image": {
+      "attachmentId": "sha256:4b81c6f105583981fca80ce9d55a8d1b975a31dd93f7e7892dcbcf883c1ba077",
+      "mediaType": "image/png",
+      "width": 16,
+      "height": 12,
+      "bytes": 83,
+      "name": "session-sources-check.png"
+    },
+    "file": {
+      "attachmentId": "sha256:b60fe9e74d11f1aeadba587a70791025361c555754117283ae421fbebb61084e",
+      "name": "session-sources-check.txt",
+      "bytes": 48
+    },
+    "sessionA": "session-sources-check-A-746b471b",
+    "firstSourceSeq": 3,
+    "sessionB": "session-sources-check-B-746b471b",
+    "branch": "session-sources-check-fork-746b471b"
+  },
+  "note": "Isolated in-memory Sessions are owned by this temporary plugin and disposed on uninstall. Two tiny immutable test attachments remain in the Host store. No model or user prompt was invoked; this is Host verification, not a GUI click test."
+}
